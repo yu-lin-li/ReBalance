@@ -1,0 +1,11 @@
+# Experiments
+*outputs*/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info
+dist/
+
+# VSCode
+.vscode/
