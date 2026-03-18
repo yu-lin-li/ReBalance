@@ -22,10 +22,12 @@
 <sup>*</sup>Corresponding Author
 <br>
 <a href='https://iclr.cc/'><img src='https://img.shields.io/badge/ICLR-2026-78CA2E.svg'></a> &nbsp;
-<a href="https://arxiv.org/abs/2603"><img src="https://img.shields.io/badge/Paper-arXiv-b31b1b.svg"></a> &nbsp;
+<a href="https://huggingface.co/papers/2603.12372"><img src="https://img.shields.io/badge/Paper-Latest-b31b1b.svg"></a> &nbsp;
 <a href='https://openreview.net/forum?id=cJseWJJ5IM'><img src='https://img.shields.io/badge/Paper-Open_Review-8D1B12.svg'></a> &nbsp;
-<a href='https://yulin.github.io/ReBalance/'><img src='https://img.shields.io/badge/Project-Page-Green'></a> &nbsp;
-<a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License"></a> &nbsp;
+<a href='https://huggingface.co/Yulin-Li/ReBalance'><img src='https://img.shields.io/badge/Model-Hugging_Face-FFD21E.svg'></a> &nbsp;
+<a href='https://rebalance-ai.github.io/#simulator'><img src='https://img.shields.io/badge/Interactive-Demo-0EA5E9.svg'></a> &nbsp;
+<a href='https://rebalance-ai.github.io'><img src='https://img.shields.io/badge/Project-Page-2EA44F.svg'></a> &nbsp;
+<a href="https://github.com/yu-lin-li/ReBalance/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License"></a> &nbsp;
 </div>
 
 ## 📚 TABLE OF CONTENTS
@@ -33,11 +35,12 @@
 1. [Why ReBalance](#-why-rebalance)
 2. [Motivation](#-motivation)
 3. [Method](#-method)
-4. [News](#-news)
-5. [TODO](#-todo)
-6. [Quick Start](#-quick-start)
-7. [Acknowledgements](#️-acknowledgements)
-8. [Citation](#-citation)
+4. [Interactive Demo](#-interactive-demo)
+5. [News](#-news)
+6. [TODO](#-todo)
+7. [Quick Start](#-quick-start)
+8. [Acknowledgements](#️-acknowledgements)
+9. [Citation](#-citation)
 
 ## 🏆 Why ReBalance
 
@@ -68,19 +71,108 @@
 1. **One-Pass Data Collection.** We first perform offline one-pass data collection on a small-scale seen dataset. At each step, the steering vector is extracted at the first token of the specified layer based on confidence, and a dynamic function is fitted according to model behaviors.
 2. **Inference with Dynamic Steering.** During deployment, the dynamic function outputs steering weights based on the model's real-time confidence online, thus balancing between overthinking and underthinking
 
+## 🎨 Interactive Demo
+
+<p align="center">
+  <img src="assets/control_surface.png" alt="3D surface of the model behavior-based dynamic control function" width="95%" />
+</p>
+
+The fitted **model behavior-based dynamic control function** is visualized as a 3D surface above. As confidence signals evolve, the control function adaptively adjusts steering weight, which in turn shifts the model between overthinking mitigation and underthinking prevention.
+
+We warmly welcome you to try our [interactive demo](https://rebalance-ai.github.io/#simulator), where you can manipulate different confidence signals and directly observe how the control function's steering behavior changes and finally affects the model's reasoning state.
+
 ## 🎉 News
 
+* **[2026.03.19]**  We release an [interactive demo](https://rebalance-ai.github.io/#simulator) to intuitively showcase how our dynamic control function adjusts steering weights based on real-time model reasoning states. Try it out!
 * **[2026.03.12]**  We Release the code and steering vectors for **DeepSeek-R1-Distill-Qwen** (1.5B, 7B), **QwQ-32B**, and [**openPangu-Embedded-7B-V1.1**](https://github.com/yu-lin-li/ReBalance/tree/openPangu). Happy coding!
 * **[2026.01.26]**  Our paper has been accepted by **ICLR 2026**🎖️.
 
 ## 🔥 TODO
 
 * [x] Initialize Project.
+* [x] Release the interactive demo.
 * [ ] Release the code and steering vectors for Qwen3-14B.
 
 ## 🚀 Quick Start
 
-**Extract Hidden States and Model Confidence Signals**
+### Easy Reproduction with Released Vectors
+
+To facilitate quick deployment and reproducibility, we have released our pre-extracted steering vectors on [Hugging Face](https://huggingface.co/Yulin-Li/ReBalance) 🤗.
+
+**Step 1. Download vectors from Hugging Face**
+
+Option 1: clone the full vector repository
+
+```bash
+git lfs install
+git clone https://huggingface.co/Yulin-Li/ReBalance
+```
+
+Option 2: download only `vectors/` with `huggingface_hub`
+
+```python
+from huggingface_hub import snapshot_download
+
+snapshot_download(
+    repo_id="Yulin-Li/ReBalance",
+    repo_type="model",
+    allow_patterns="vectors/*",
+    local_dir="."
+)
+```
+
+Then place the downloaded `vectors/` folder under your local project root as:
+
+```text
+ReBalance/
+├── ...
+├── transformer_inference_steer_dp.py
+└── vectors/
+    ├── DeepSeek-R1-Distill-Qwen-1.5B/
+    │   └── steer_vector_layer19_conf_mixed.pt
+    ├── DeepSeek-R1-Distill-Qwen-7B/
+    │   └── steer_vector_layer22_conf_mixed.pt
+    └── QwQ-32B/
+        └── steer_vector_layer58_conf_mixed.pt
+```
+
+**Step 2. Inference with dynamic steering**
+
+```bash
+python transformer_inference_steer_dp.py \
+  --model_name_or_path 'DeepSeek-R1-Distill-Qwen-1.5B' \
+  --dataset_dir "./Data/" \
+  --output_path "./outputs" \
+  --dataset "Math_AIME2024" \
+  --max_generated_tokens 16000 \
+  --num_gpus 8 \
+  --steer_vector_path ./vectors/DeepSeek-R1-Distill-Qwen-1.5B/steer_vector_layer19_conf_mixed.pt \
+  --steer_layer 19 \
+  --steer_coef -1
+```
+
+**Step 3. Merge multi-GPU shards**
+
+```bash
+python merge_shards.py \
+  --dir ./outputs/DeepSeek-R1-Distill-Qwen-1.5B/Math_AIME2024 \
+  --base 'steer_temp0.7_maxlen16000'
+```
+
+**Step 4. Evaluate merged outputs**
+
+```bash
+python check.py \
+  --model_name_or_path 'DeepSeek-R1-Distill-Qwen-1.5B' \
+  --data_name "Math_AIME2024" \
+  --generation_path "./outputs/DeepSeek-R1-Distill-Qwen-1.5B/Math_AIME2024/steer_temp0.7_maxlen16000.merged.jsonl"
+```
+
+### Extract Steering Vectors Yourself
+
+To better understand the underlying mechanisms of ReBalance or apply it to a broader range of models, you can conveniently obtain a lightweight steering vector (e.g., only 22 KB for QwQ-32B) in a single pass over a small-scale seen dataset.
+
+**Step 1. Extract hidden states and model confidence signals**
 
 ```bash
 python transformer_inference_dp.py \
@@ -93,7 +185,7 @@ python transformer_inference_dp.py \
   --trust_remote_code
 ```
 
-**Automated Best-Layer Search for Confidence Modeling**
+**Step 2. Automated best-layer selection for confidence modeling**
 
 ```bash
 python hidden_config_ridge.py \
@@ -108,7 +200,7 @@ python hidden_config_ridge.py \
   --random_state 42
 ```
 
-**Extracting Steering Vectors with Automatic Calibration of Inference Parameters**
+**Step 3. Extract steering vectors with automatic calibration**
 
 ```bash
 python hidden_analysis_auto.py \
@@ -120,7 +212,7 @@ python hidden_analysis_auto.py \
   --expected_offset 1
 ```
 
-**ReBalance Steering Inference with Dynamic Confidence–Variance Calibration**
+**Step 4. Dynamic steering with your extracted vectors**
 
 ```bash
 python transformer_inference_steer_dp.py \
@@ -130,12 +222,12 @@ python transformer_inference_steer_dp.py \
   --dataset "Math_AIME2024" \
   --max_generated_tokens 16000 \
   --num_gpus 8 \
-  --steer_vector_path ./vectors/DeepSeek-R1-Distill-Qwen-1.5B/steer_vector_layer19_conf_mixed.pt \
+  --steer_vector_path ./outputs/DeepSeek-R1-Distill-Qwen-1.5B/steer_vector_layer19_conf_mixed.pt \
   --steer_layer 19 \
-  --steer_coef -1 
+  --steer_coef -1
 ```
 
-**Merging Multi-GPU Inference Shards**
+**Step 5. Merge multi-GPU shards**
 
 ```bash
 python merge_shards.py \
@@ -143,13 +235,13 @@ python merge_shards.py \
   --base 'steer_temp0.7_maxlen16000'
 ```
 
-**Evaluating Accuracy and Token Length of Merged Inference Outputs**
+**Step 6. Evaluate merged outputs**
 
 ```bash
 python check.py \
-    --model_name_or_path 'DeepSeek-R1-Distill-Qwen-1.5B' \
-    --data_name "Math_AIME2024" \
-    --generation_path "./outputs/DeepSeek-R1-Distill-Qwen-1.5B/Math_AIME2024/steer_temp0.7_maxlen16000.merged.jsonl"  
+  --model_name_or_path 'DeepSeek-R1-Distill-Qwen-1.5B' \
+  --data_name "Math_AIME2024" \
+  --generation_path "./outputs/DeepSeek-R1-Distill-Qwen-1.5B/Math_AIME2024/steer_temp0.7_maxlen16000.merged.jsonl"
 ```
 
 ## ❤️ Acknowledgements
