@@ -140,6 +140,7 @@ ReBalance/
 ```
 
 **Step 2. Inference with dynamic steering**
+
 For Qwen3 models, use `transformer_inference_steer_dp_qwen3.py` instead.
 
 ```bash
@@ -217,6 +218,7 @@ python hidden_analysis_auto.py \
 ```
 
 **Step 4. Dynamic steering with your extracted vectors**
+
 For Qwen3 models, use `transformer_inference_steer_dp_qwen3.py` instead.
 
 ```bash
