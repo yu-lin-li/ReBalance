@@ -83,15 +83,16 @@ We warmly welcome you to try our [interactive demo](https://rebalance-ai.github.
 
 ## 🎉 News
 
+* **[2026.05.04]**  We release the code and steering vectors for **Qwen3-14B**. Please enjoy~
 * **[2026.03.19]**  We release an [interactive demo](https://rebalance-ai.github.io/#simulator) to intuitively showcase how our dynamic control function adjusts steering weights based on real-time model reasoning states. Try it out!
-* **[2026.03.12]**  We Release the code and steering vectors for **DeepSeek-R1-Distill-Qwen** (1.5B, 7B), **QwQ-32B**, and [**openPangu-Embedded-7B-V1.1**](https://github.com/yu-lin-li/ReBalance/tree/openPangu). Happy coding!
+* **[2026.03.12]**  We release the code and steering vectors for **DeepSeek-R1-Distill-Qwen** (1.5B, 7B), **QwQ-32B**, and [**openPangu-Embedded-7B-V1.1**](https://github.com/yu-lin-li/ReBalance/tree/openPangu). Happy coding!
 * **[2026.01.26]**  Our paper has been accepted by **ICLR 2026**🎖️.
 
 ## 🔥 TODO
 
 * [x] Initialize Project.
 * [x] Release the interactive demo.
-* [ ] Release the code and steering vectors for Qwen3-14B.
+* [x] Release the code and steering vectors for Qwen3-14B.
 
 ## 🚀 Quick Start
 
@@ -132,11 +133,14 @@ ReBalance/
     │   └── steer_vector_layer19_conf_mixed.pt
     ├── DeepSeek-R1-Distill-Qwen-7B/
     │   └── steer_vector_layer22_conf_mixed.pt
+    ├── Qwen3-14B/
+    │   └── steer_vector_layer34_conf_mixed.pt
     └── QwQ-32B/
         └── steer_vector_layer58_conf_mixed.pt
 ```
 
 **Step 2. Inference with dynamic steering**
+For Qwen3 models, use `transformer_inference_steer_dp_qwen3.py` instead.
 
 ```bash
 python transformer_inference_steer_dp.py \
@@ -213,6 +217,7 @@ python hidden_analysis_auto.py \
 ```
 
 **Step 4. Dynamic steering with your extracted vectors**
+For Qwen3 models, use `transformer_inference_steer_dp_qwen3.py` instead.
 
 ```bash
 python transformer_inference_steer_dp.py \
